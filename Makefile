@@ -1,4 +1,4 @@
-.PHONY: help clean build
+.PHONY: help clean build test
 
 #: Show this help
 help:
