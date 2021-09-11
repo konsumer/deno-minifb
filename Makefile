@@ -9,7 +9,7 @@ clean:
 	cargo clean
 
 #: build rust lib
-build:
+build: src/lib.rs
 	cargo build
 
 #: test the deno integration

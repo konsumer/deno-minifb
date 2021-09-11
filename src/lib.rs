@@ -1,23 +1,23 @@
 extern crate minifb;
 
-use minifb::Key;
 use minifb::Window;
 use minifb::WindowOptions;
 
 #[no_mangle]
-pub extern "C" fn show(title: &String, width: &usize, height: &usize, buffer: &mut Vec<u32>) {
-    let mut window =
-        Window::new(title, *width, *height, WindowOptions::default()).unwrap_or_else(|e| {
+pub extern "C" fn window_new(title: &String, width: &usize, height: &usize) -> usize {
+    let win =
+        &mut Window::new(title, *width, *height, WindowOptions::default()).unwrap_or_else(|e| {
             panic!("{}", e);
         });
+    return win as *const _ as usize;
+}
 
-    // Limit to max ~60 fps update rate
-    window.limit_update_rate(Some(std::time::Duration::from_micros(16600)));
-
-    while window.is_open() && !window.is_key_down(Key::Escape) {
-        for i in buffer.iter_mut() {
-            *i = 0;
-        }
-        window.update_with_buffer(&buffer, *width, *height).unwrap();
-    }
+#[no_mangle]
+pub extern "C" fn window_update(
+    window: &mut Window,
+    buffer: &mut Vec<u32>,
+    width: &usize,
+    height: &usize,
+) {
+    window.update_with_buffer(&buffer, *width, *height).unwrap();
 }
