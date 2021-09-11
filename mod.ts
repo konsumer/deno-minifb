@@ -22,20 +22,23 @@ const lib = Deno.dlopen(path, {
   }
 })
 
+// convert a string into a buffer (that can be used with FFI string)
+const strToBuffer = (str:string) => new Uint8Array([...new TextEncoder().encode(str), 0])
+
 export default class Window {
   #id
+  #height
+  #width
   buffer
-  height
-  width
 
   constructor(title="minifb", width=800, height=600){
-    this.#id = lib.symbols.window_new(new Uint8Array([...Deno.encode(title), 0]), width, height)
-    this.buffer = (new Uint8Array(width*height*4)).fill(0)
-    this.width = width
-    this.height = height
+    this.#id = lib.symbols.window_new(strToBuffer(title), width, height)
+    this.buffer = (new Uint8Array(width*height)).fill(0)
+    this.#width = width
+    this.#height = height
   }
   
   update(){
-     lib.symbols.window_update(this.#id, this.buffer, this.width, this.height)
+     lib.symbols.window_update(this.#id, this.buffer, this.#width, this.#height)
   }
 }
