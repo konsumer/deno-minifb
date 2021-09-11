@@ -17,7 +17,7 @@ const lib = Deno.dlopen(path, {
   },
 
   window_update: {
-    paramaters: ["u32", "buffer", "usize", "usize"],
+    paramaters: ["usize", "buffer", "usize", "usize"],
     result: "void"
   }
 })
