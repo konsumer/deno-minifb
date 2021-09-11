@@ -5,7 +5,7 @@ Deno.test("has tests", () => {
   assertEquals(true, !false)
 })
 
-Deno.test("has correct shap", () => {
-  console.log(minifb)
+Deno.test("has correct shape", () => {
+  assertEquals(typeof minifb, 'function')
 })
 

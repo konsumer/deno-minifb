@@ -9,11 +9,10 @@ clean:
 	cargo clean
 
 #: build rust lib
-build: target/debug/libdeno_minifb.dylib
+build:
+	cargo build
 
 #: test the deno integration
-test: target/debug/libdeno_minifb.dylib
+test: build
 	deno test --unstable --allow-all
 
-target/debug/libdeno_minifb.dylib:
-	cargo build
