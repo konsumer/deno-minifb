@@ -1,11 +1,14 @@
-let path
-if (Deno.build.os === "linux") {
-  path = "./target/debug/libdeno_minifb.so"
-} else if (Deno.build.os === "windows") {
-  path = "./target/debug/deno_minifb.dll"
-} else if (Deno.build.os === "darwin") {
-  path = "./target/debug/libdeno_minifb.dylib"
-} else throw new Error(`Unsupported OS: ${Deno.build.os}`)
+let path = Deno.env.get("DENO_MINIFB_LOCATION") ?? ""
+
+if (path === "") {
+  if (Deno.build.os === "linux") {
+    path = "./target/debug/libdeno_minifb.so"
+  } else if (Deno.build.os === "windows") {
+    path = "./target/debug/deno_minifb.dll"
+  } else if (Deno.build.os === "darwin") {
+    path = "./target/debug/libdeno_minifb.dylib"
+  } else throw new Error(`Unsupported OS: ${Deno.build.os}`)
+}
 
 const lib = Deno.dlopen(path, {
   window_new: {
