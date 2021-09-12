@@ -31,7 +31,7 @@ strokeStar(r + 10, r + 10, r, 5, 0.5)
 window.updateWithBuffer(canvas.getRawBuffer(0, 0, width, height))
 
 setInterval(() => {
-  if (window.isOpen) {
+  if (window.open) {
     window.update()
   } else {
     Deno.exit(0)

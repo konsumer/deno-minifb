@@ -46,9 +46,26 @@ const lib = Deno.dlopen(path, {
 
 const encode = (str: string): Uint8Array => (Deno as any).core.encode(str)
 
+const ERROR_CODES: {
+  [code: number]: string | undefined
+} = {
+  2: "Window not found",
+  3: "Failed to updateWithBuffer"
+}
+
 function unwrap(result: number) {
-  if (result !== 0) {
-    throw new Error(`Non-Zero Value Returned: ${result}`)
+  let error;
+  if ((error = ERROR_CODES[result])) {
+    throw new Error(`Unwrap called on Error Value (${result}): ${error}`)
+  }
+}
+
+function unwrapBoolean(result: number): boolean {
+  if (result !== 0 && result !== 1) {
+    unwrap(result)
+    return false
+  } else {
+    return result === 1
   }
 }
 
@@ -79,15 +96,15 @@ export class Window {
   /**
    * Returns true if the Window is open.
    */
-  get isOpen() {
-    return lib.symbols.window_is_open(this.#id) === 1
+  get open() {
+    return unwrapBoolean(lib.symbols.window_is_open(this.#id) as number)
   }
 
   /**
    * Returns true if the Window is active.
    */
-  get isActive() {
-    return lib.symbols.window_is_active(this.#id) === 1
+  get active() {
+    return unwrapBoolean(lib.symbols.window_is_active(this.#id) as number)
   }
 
   /**

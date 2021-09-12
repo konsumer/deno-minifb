@@ -7,6 +7,10 @@ use std::collections::HashMap;
 use minifb::Window;
 use minifb::WindowOptions;
 
+pub static SUCCESS: u32 = 0;
+pub static ERR_WINDOW_NOT_FOUND: u32 = 2;
+pub static ERR_UPDATE_WITH_BUFFER_FAILED: u32 = 3;
+
 thread_local! {
     static WINDOWS: RefCell<HashMap<u32, Window>> = RefCell::new(HashMap::new());
 }
@@ -40,9 +44,9 @@ pub extern "C" fn window_close(id: u32) -> u32 {
 
         if map.contains_key(&id) {
             map.remove(&id);
-            0
+            SUCCESS
         } else {
-            1
+            ERR_WINDOW_NOT_FOUND
         }
     })
 }
@@ -55,7 +59,7 @@ pub extern "C" fn window_is_open(id: u32) -> u32 {
         if let Some(window) = map.get(&id) {
             if window.is_open() { 1 } else { 0 }
         } else {
-            2
+            ERR_WINDOW_NOT_FOUND
         }
     })
 }
@@ -68,7 +72,7 @@ pub extern "C" fn window_is_active(id: u32) -> u32 {
         if let Some(window) = map.get_mut(&id) {
             if window.is_active() { 1 } else { 0 }
         } else {
-            2
+            ERR_WINDOW_NOT_FOUND
         }
     })
 }
@@ -82,9 +86,9 @@ pub extern "C" fn window_limit_update_rate(id: u32, ms: u64) -> u32 {
             window.limit_update_rate(if ms == 0 { None } else {
                 Some(std::time::Duration::from_micros(ms))
             });
-            0
+            SUCCESS
         } else {
-            1
+            ERR_WINDOW_NOT_FOUND
         }
     })
 }
@@ -109,12 +113,12 @@ pub extern "C" fn window_update_with_buffer(id: u32, buffer: *const u8, width: u
             }
 
             if let Ok(()) = window.update_with_buffer(&buffer, width, height) {
-                0
+                SUCCESS
             } else {
-                2
+                ERR_UPDATE_WITH_BUFFER_FAILED
             }
         } else {
-            1
+            ERR_WINDOW_NOT_FOUND
         }
     })
 }
@@ -126,9 +130,9 @@ pub extern "C" fn window_update(id: u32) -> u32 {
 
         if let Some(window) = map.get_mut(&id) {
             window.update();
-            0
+            SUCCESS
         } else {
-            1
+            ERR_WINDOW_NOT_FOUND
         }
     })
 }
