@@ -5,7 +5,7 @@ const width = 500, height = 500
 
 const canvas = createCanvas(width, height)
 const ctx = canvas.getContext("2d")
-const window = new MiniFB("My Window", width, height)
+const win = new MiniFB("My Window", width, height)
 
 // https://stackoverflow.com/a/45140101/12101923
 function strokeStar(x: number, y: number, r: number, n: number, inset: number) {
@@ -28,11 +28,11 @@ ctx.fillStyle = 'yellow'
 const r = (width - 20) / 2
 strokeStar(r + 10, r + 10, r, 5, 0.5)
 
-window.updateWithBuffer(canvas.getRawBuffer(0, 0, width, height))
+win.updateWithBuffer(canvas.getRawBuffer(0, 0, width, height))
 
 setInterval(() => {
-  if (window.open) {
-    window.update()
+  if (win.open) {
+    win.update()
   } else {
     Deno.exit(0)
   }
