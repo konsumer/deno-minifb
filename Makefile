@@ -9,15 +9,15 @@ setup:
 	curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 	curl -fsSL https://deno.land/x/install/install.sh | sh
 
-#: clean rust lib
+#: Clean rust lib
 clean:
 	cargo clean
 
-#: build rust lib
+#: Build rust lib
 build: src/lib.rs
 	cargo build
 
-#: test the deno integration
+#: Test the deno integration
 test: build
 	deno test --unstable --allow-all
 
