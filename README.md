@@ -4,7 +4,7 @@ This is a thin wrapper around [minifb](https://github.com/emoon/minifb) that you
 
 # WIP
 
-We are still working on it. Also, currently, you need to run deno from [this PR](https://github.com/denoland/deno/pull/11648). The first goal is to get a basic window for canvas, but eventually we plan to add mouse, key, exit-handler, and loop-lifecycle stuff (for locking into a specific framerate.) Th evenutaly goal is to be a minimal piece to making performant native games in deno, using standardd web APIs.
+We are still working on it. Also, currently, you need to run deno from [this PR](https://github.com/denoland/deno/pull/11648). The first goal is to get a basic window for canvas, but eventually we plan to add mouse, key, exit-handler, and loop-lifecycle stuff (for locking into a specific framerate.) The evenutal goal is to be a minimal piece to making performant native games in deno, using standardd web APIs.
 
 ## usage
 
