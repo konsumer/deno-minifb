@@ -28,3 +28,7 @@ test: build
 #: run a simple demo
 demo: build
 	$(DENO) run --unstable --allow-all ./examples/canvas.ts
+
+#: run a deno-themed demo
+deno: build
+	$(DENO) run --unstable --allow-all ./examples/canvas_cross.js

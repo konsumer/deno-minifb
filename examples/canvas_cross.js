@@ -64,6 +64,8 @@ async function mainDeno () {
   const ctx = canvas.getContext('2d')
   const win = new MiniFB('minifb!', 400, 400)
 
+  await currentScene.setup(canvas)
+
   setInterval(() => {
     if (win.open) {
       currentScene.draw(Date.now(), ctx)
