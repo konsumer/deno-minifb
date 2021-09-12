@@ -99,7 +99,7 @@ pub extern "C" fn window_update_with_buffer(id: u32, buffer: *const u8, width: u
             let mut buffer = vec![0u32; width * height];
 
             let mut idx = 0;
-            while idx < width * height {
+            while idx < buffer.len() {
                 let r = bufu8[idx * 4 + 0] as u32;
                 let g = bufu8[idx * 4 + 1] as u32;
                 let b = bufu8[idx * 4 + 2] as u32;
