@@ -2,7 +2,7 @@
 # DENO := $(shell which deno)
 DENO = $(PWD)/../deno-pr-buffers/target/debug/deno
 
-.PHONY: help clean setup test demo
+.PHONY: help clean setup test demo deno web
 
 #: Show this help
 help:
@@ -25,10 +25,14 @@ build: src/lib.rs
 test: build
 	$(DENO) test --unstable --allow-all
 
-#: run a simple demo
+#: Run a simple canvas demo
 demo: build
 	$(DENO) run --unstable --allow-all ./examples/canvas.ts
 
-#: run a deno-themed demo
+#: Run a deno-themed demo, that works in browser
 deno: build
 	$(DENO) run --unstable --allow-all ./examples/canvas_cross.js
+
+# Run the deno demo in a browser
+web:
+	cd examples && npx live-server

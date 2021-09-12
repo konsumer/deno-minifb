@@ -53,23 +53,24 @@ const currentScene = {
   },
 
   draw (time, ctx) {
-    denoLogo.draw(ctx, time, 0, 0, 20, 20)
+    denoLogo.draw(ctx, time, 0, 0, 40, 40)
   }
 }
 
+// This will bind currentScene to minifb/canvas
 async function mainDeno () {
   const { createCanvas } = await import('https://deno.land/x/canvas/mod.ts')
   const { MiniFB } = await import('../mod.ts')
-  const canvas = createCanvas(400, 400)
+  const canvas = createCanvas(800, 800)
   const ctx = canvas.getContext('2d')
-  const win = new MiniFB('minifb!', 400, 400)
+  const win = new MiniFB('minifb!', 800, 800)
 
   await currentScene.setup(canvas)
 
   setInterval(() => {
     if (win.open) {
       currentScene.draw(Date.now(), ctx)
-      win.updateWithBuffer(canvas.getRawBuffer(0, 0, 400, 400))
+      win.updateWithBuffer(canvas.getRawBuffer(0, 0, 800, 800))
       // win.update()
     } else {
       Deno.exit(0)
@@ -77,6 +78,7 @@ async function mainDeno () {
   }, 1000 / 60)
 }
 
+// This will bind currentScene to the browser for canvas
 async function mainBrowser () {
   const canvas = document.getElementById('canvas')
   const ctx = canvas.getContext('2d')
