@@ -72,7 +72,7 @@ function unwrapBoolean(result: number): boolean {
   }
 }
 
-export class Window {
+export class MiniFB {
   #id
 
   constructor(

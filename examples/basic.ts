@@ -1,11 +1,11 @@
-import { Window } from "../mod.ts"
+import { MiniFB } from "../mod.ts"
 import { createCanvas } from "https://raw.githubusercontent.com/DjDeveloperr/deno-canvas/dc0969b15f1e30a866a6bf6bed8b8a4b7393f925/mod.ts"
 
 const width = 500, height = 500
 
 const canvas = createCanvas(width, height)
 const ctx = canvas.getContext("2d")
-const window = new Window("My Window", width, height)
+const window = new MiniFB("My Window", width, height)
 
 // https://stackoverflow.com/a/45140101/12101923
 function strokeStar(x: number, y: number, r: number, n: number, inset: number) {
