@@ -1,4 +1,4 @@
-.PHONY: help clean test
+.PHONY: help clean setup test
 
 #: Show this help
 help:
