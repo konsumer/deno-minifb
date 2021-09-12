@@ -9,3 +9,9 @@ This is a thin wrapper around [minifb](https://github.com/emoon/minifb) that you
 ```ts
 // TODO
 ```
+
+## development
+
+You will need `deno`, `make`, and `cargo` (for rust) in your path. On mac or linux, run `make setup` to install everything you need.
+
+Run `make` for some help.
