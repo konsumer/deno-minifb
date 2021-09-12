@@ -33,6 +33,6 @@ demo: build
 deno: build
 	$(DENO) run --unstable --allow-all ./examples/canvas_cross.js
 
-# Run the deno demo in a browser
+#: Run the deno demo in a browser
 web:
 	cd examples && npx live-server
