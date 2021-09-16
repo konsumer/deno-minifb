@@ -28,11 +28,9 @@ ctx.fillStyle = 'yellow'
 const r = (width - 20) / 2
 strokeStar(r + 10, r + 10, r, 5, 0.5)
 
-win.updateWithBuffer(canvas.getRawBuffer(0, 0, width, height))
-
 setInterval(() => {
   if (win.open) {
-    win.update()
+    win.updateWithBuffer(canvas.getRawBuffer(0, 0, width, height))
   } else {
     Deno.exit(0)
   }
