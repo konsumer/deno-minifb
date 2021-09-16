@@ -25,11 +25,15 @@ build: src/lib.rs
 test: build
 	$(DENO) test --unstable --allow-all
 
+#: Run a webgpu demo
+webgpu: build
+	$(DENO) run --unstable --allow-all ./examples/webgpu.ts
+
 #: Run a simple canvas demo
-demo: build
+canvas: build
 	$(DENO) run --unstable --allow-all ./examples/canvas.ts
 
-#: Run a deno-themed demo, that works in browser
+#: Run a deno-themed canvas demo, that also works in browser
 deno: build
 	$(DENO) run --unstable --allow-all ./examples/canvas_cross.js
 
