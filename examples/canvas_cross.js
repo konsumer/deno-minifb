@@ -48,7 +48,7 @@ class CanvasUtils {
   }
 
   // setup main loop
-  async loop (cb, canvas) {
+  loop (cb, canvas) {
     if ('Deno' in window) {
       setInterval(() => {
         if (canvas.window.open) {
