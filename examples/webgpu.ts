@@ -37,7 +37,7 @@ class Framework {
 
   async loop() {
     await this.init();
-    const win = new MiniFB("My Window", 800, 800);
+    const win = new MiniFB("My Window", this.dimensions.width, this.dimensions.height);
     const { texture, outputBuffer } = createCapture(
       this.device,
       this.dimensions,
