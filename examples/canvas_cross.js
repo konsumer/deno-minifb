@@ -99,9 +99,11 @@ const spritesheet = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAYAAAAAYAgMAA
 async function main () {
   const utils = new CanvasUtils()
   const image = await utils.image(spritesheet)
+
   // this seems required by deno-canvas, not sure why
   image.height = 24
   image.width = 384
+
   const denoLogo = new Animation(image, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], 150, 24, 24)
   const canvas = await utils.canvas(800, 800)
   const context = canvas.getContext('2d')
