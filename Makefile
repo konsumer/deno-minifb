@@ -34,9 +34,9 @@ canvas: build
 	$(DENO) run --unstable --allow-all ./examples/canvas.ts
 
 #: Run a deno-themed canvas demo, that also works in browser
-deno: build
+cross: build
 	$(DENO) run --unstable --allow-all ./examples/canvas_cross.js
 
-#: Run the deno demo in a browser
+#: Run the deno-themed canvas demo, in browser
 web:
 	cd examples && npx live-server

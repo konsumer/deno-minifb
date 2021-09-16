@@ -21,8 +21,9 @@ class CanvasUtils {
   async canvas (width, height) {
     if ('Deno' in window) {
       const libs = await this.libs
-      this._win = new libs.minifb.MiniFB('minifb!', width, height)
-      return libs.canvas.createCanvas(width, height)
+      const canvas = libs.canvas.createCanvas(width, height)
+      canvas.window = new libs.minifb.MiniFB('deno minifb!', width, height)
+      return canvas
     } else {
       const c = document.querySelector('canvas')
       c.width = width
@@ -35,7 +36,7 @@ class CanvasUtils {
   async image (src) {
     if ('Deno' in window) {
       const libs = await this.libs
-      return await libs.canvas.loadImage(src)
+      return libs.canvas.loadImage(src)
     } else {
       return new Promise((resolve, reject) => {
         const image = new Image()
@@ -50,9 +51,9 @@ class CanvasUtils {
   async loop (cb, canvas) {
     if ('Deno' in window) {
       setInterval(() => {
-        if (this._win.open) {
+        if (canvas.window.open) {
           cb(canvas)
-          this._win.updateWithBuffer(canvas.getRawBuffer(0, 0, canvas.width, canvas.height))
+          canvas.window.updateWithBuffer(canvas.getRawBuffer(0, 0, canvas.width, canvas.height))
         } else {
           Deno.exit(0)
         }
@@ -84,7 +85,7 @@ class Animation {
     this.frames = frames.map(f => [(f % x) * height, Math.floor(f / x) * width])
   }
 
-  draw (context, time, x, y, sx = 1, sy = 1) {
+  draw (context, time, x = 0, y = 0, sx = 1, sy = 1) {
     if (this.playing) {
       this.frame = Math.floor(time / this.speed) % this.frames.length
     }
@@ -98,10 +99,13 @@ const spritesheet = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAYAAAAAYAgMAA
 async function main () {
   const utils = new CanvasUtils()
   const image = await utils.image(spritesheet)
+  // this seems required by deno-canvas, not sure why
+  image.height = 24
+  image.width = 384
   const denoLogo = new Animation(image, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], 150, 24, 24)
   const canvas = await utils.canvas(800, 800)
   const context = canvas.getContext('2d')
   context.imageSmoothingEnabled = false
-  utils.loop(() => denoLogo.draw(context, Date.now(), 0, 0, 40, 40), canvas)
+  utils.loop(() => denoLogo.draw(context, Date.now(), 0, 0, 34, 34), canvas)
 }
 main()
