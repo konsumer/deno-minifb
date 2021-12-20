@@ -6,14 +6,21 @@ use std::sync::Arc;
 use std::sync::Mutex;
 use std::sync::MutexGuard;
 
+use key::key_to_id;
+use key::KeyId;
+use minifb::KeyRepeat;
 use minifb::Menu as MfbMenu;
 use minifb::MenuHandle;
 use minifb::MenuItem as MfbMenuItem;
 use minifb::MenuItemHandle;
+use minifb::MouseButton;
+use minifb::MouseMode;
 // use minifb::Key;
 use minifb::Window as MfbWindow;
 use minifb::WindowOptions;
 use once_cell::sync::Lazy;
+
+pub mod key;
 
 pub type ResourceId = u32;
 
@@ -66,6 +73,7 @@ pub static MENU_HANDLES: Lazy<Mutex<HashMap<ResourceId, MenuHandle>>> =
     Lazy::new(|| Mutex::new(HashMap::new()));
 pub static MENU_ITEM_HANDLES: Lazy<Mutex<HashMap<ResourceId, MenuItemHandle>>> =
     Lazy::new(|| Mutex::new(HashMap::new()));
+pub static NEXT_KEYS: Lazy<Mutex<Vec<KeyId>>> = Lazy::new(|| Mutex::new(Vec::new()));
 
 pub type Result = u8;
 pub const OK: Result = 1;
@@ -243,6 +251,129 @@ pub unsafe extern "C" fn window_is_menu_pressed(id: ResourceId, pressed: *mut is
     } else {
         error_resource_not_found(id)
     }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn window_get_mouse_down(
+    id: ResourceId,
+    button: u8,
+    down: *mut bool,
+) -> Result {
+    let windows = WINDOWS.lock().unwrap();
+
+    if let Some(window) = windows.get(&id) {
+        let window = window.get();
+        *down = window.get_mouse_down(match button {
+            0 => MouseButton::Left,
+            1 => MouseButton::Right,
+            2 => MouseButton::Middle,
+            _ => return error("Invalid mouse button"),
+        });
+        OK
+    } else {
+        error_resource_not_found(id)
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn window_get_mouse_pos(
+    id: ResourceId,
+    mode: u8,
+    none: *mut bool,
+    x: *mut f32,
+    y: *mut f32,
+) -> Result {
+    let windows = WINDOWS.lock().unwrap();
+
+    if let Some(window) = windows.get(&id) {
+        let window = window.get();
+        let pos = window.get_mouse_pos(match mode {
+            0 => MouseMode::Clamp,
+            1 => MouseMode::Pass,
+            2 => MouseMode::Discard,
+            _ => return error("Invalid mouse mode"),
+        });
+        if let Some((px, py)) = pos {
+            *x = px;
+            *y = py;
+        } else {
+            *none = true;
+        }
+        OK
+    } else {
+        error_resource_not_found(id)
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn window_get_keys(id: ResourceId, keys_len: *mut usize) -> Result {
+    let windows = WINDOWS.lock().unwrap();
+
+    if let Some(window) = windows.get(&id) {
+        let window = window.get();
+        let keys = window.get_keys();
+        let mut data = vec![0 as KeyId; keys.len()];
+        for (i, key) in keys.iter().enumerate() {
+            data[i] = key_to_id(*key);
+        }
+        *keys_len = data.len();
+        *NEXT_KEYS.lock().unwrap() = data;
+        OK
+    } else {
+        error_resource_not_found(id)
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn window_get_keys_pressed(
+    id: ResourceId,
+    keys_len: *mut usize,
+    repeat: u8,
+) -> Result {
+    let windows = WINDOWS.lock().unwrap();
+
+    if let Some(window) = windows.get(&id) {
+        let window = window.get();
+        let keys = window.get_keys_pressed(match repeat {
+            0 => KeyRepeat::No,
+            _ => KeyRepeat::Yes,
+        });
+        let mut data = vec![0 as KeyId; keys.len()];
+        for (i, key) in keys.iter().enumerate() {
+            data[i] = key_to_id(*key);
+        }
+        *keys_len = data.len();
+        *NEXT_KEYS.lock().unwrap() = data;
+        OK
+    } else {
+        error_resource_not_found(id)
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn window_get_keys_released(id: ResourceId, keys_len: *mut usize) -> Result {
+    let windows = WINDOWS.lock().unwrap();
+
+    if let Some(window) = windows.get(&id) {
+        let window = window.get();
+        let keys = window.get_keys_released();
+        let mut data = vec![0 as KeyId; keys.len()];
+        for (i, key) in keys.iter().enumerate() {
+            data[i] = key_to_id(*key);
+        }
+        *keys_len = data.len();
+        *NEXT_KEYS.lock().unwrap() = data;
+        OK
+    } else {
+        error_resource_not_found(id)
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn read_keys(out_keys: *mut u8) {
+    let mut keys = NEXT_KEYS.lock().unwrap();
+    std::ptr::copy(keys.as_slice().as_ptr(), out_keys, keys.len());
+    *keys = Vec::new();
 }
 
 #[no_mangle]
@@ -432,12 +563,12 @@ pub unsafe extern "C" fn menu_add_sub_menu(
     id: ResourceId,
     name: *mut c_char,
     sub_menu_id: ResourceId,
- ) -> Result {
+) -> Result {
     let menus = MENUS.lock().unwrap();
 
     if let Some(menu) = menus.get(&id) {
         let mut menu = menu.get();
-        
+
         if let Some(sub_menu) = menus.get(&sub_menu_id) {
             let sub_menu = sub_menu.get();
             menu.add_sub_menu(CString::from_raw(name).to_str().unwrap(), &sub_menu);

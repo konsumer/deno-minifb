@@ -76,6 +76,36 @@ const lib = Deno.dlopen(path, {
     result: "u8",
   },
 
+  window_get_keys: {
+    parameters: ["u32", "pointer"],
+    result: "u8",
+  },
+
+  window_get_keys_pressed: {
+    parameters: ["u32", "pointer", "u8"],
+    result: "u8",
+  },
+
+  window_get_keys_released: {
+    parameters: ["u32", "pointer"],
+    result: "u8",
+  },
+
+  read_keys: {
+    parameters: ["pointer"],
+    result: "void",
+  },
+
+  window_get_mouse_down: {
+    parameters: ["u32", "u8", "pointer"],
+    result: "u8",
+  },
+
+  window_get_mouse_pos: {
+    parameters: ["u32", "u8", "pointer", "pointer", "pointer"],
+    result: "u8",
+  },
+
   window_close: {
     parameters: ["u32"],
     result: "u8",
@@ -191,8 +221,8 @@ export class MiniFB {
 
   constructor(
     title: string,
-    public width: number,
-    public height: number,
+    width: number,
+    height: number,
   ) {
     const idPtr = new Uint32Array(1);
     unwrap(lib.symbols.window_new(
@@ -246,6 +276,80 @@ export class MiniFB {
 
   removeMenu(handle: number) {
     unwrap(lib.symbols.window_remove_menu(this.#id, handle));
+  }
+
+  getKeys() {
+    const keysLenPtr = new BigUint64Array(1);
+    unwrap(lib.symbols.window_get_keys(this.#id, keysLenPtr));
+    const keys = new Uint8Array(Number(keysLenPtr[0]));
+    unwrap(lib.symbols.read_keys(keys));
+    return Array.from(keys);
+  }
+
+  getKeysPressed(repeat: boolean = false) {
+    const keysLenPtr = new BigUint64Array(1);
+    unwrap(
+      lib.symbols.window_get_keys_pressed(this.#id, keysLenPtr, repeat ? 1 : 0),
+    );
+    const keys = new Uint8Array(Number(keysLenPtr[0]));
+    unwrap(lib.symbols.read_keys(keys));
+    return Array.from(keys);
+  }
+
+  getKeysReleased() {
+    const keysLenPtr = new BigUint64Array(1);
+    unwrap(lib.symbols.window_get_keys_released(this.#id, keysLenPtr));
+    const keys = new Uint8Array(Number(keysLenPtr[0]));
+    unwrap(lib.symbols.read_keys(keys));
+    return Array.from(keys);
+  }
+
+  getMouseDown(button: "left" | "right" | "middle") {
+    const pressed = new Uint8Array(1);
+    unwrap(
+      lib.symbols.window_get_mouse_down(
+        this.#id,
+        ["left", "right", "middle"].findIndex((e) => e === button),
+        pressed,
+      ),
+    );
+    return pressed[0] === 1;
+  }
+
+  getSize(): [number, number] {
+    const widthPtr = new BigUint64Array(1);
+    const heightPtr = new BigUint64Array(1);
+    unwrap(lib.symbols.window_get_size(this.#id, widthPtr, heightPtr));
+    return [Number(widthPtr[0]), Number(heightPtr[0])];
+  }
+
+  get width() {
+    return this.getSize()[0];
+  }
+
+  get height() {
+    return this.getSize()[1];
+  }
+
+  getMousePos(
+    mode: "clamp" | "pass" | "discard" = "clamp",
+  ): [number, number] | undefined {
+    const nonePtr = new Uint8Array(1);
+    const xPtr = new Float32Array(1);
+    const yPtr = new Float32Array(1);
+    unwrap(
+      lib.symbols.window_get_mouse_pos(
+        this.#id,
+        ["clamp", "pass", "discard"].findIndex((e) => e === mode),
+        nonePtr,
+        xPtr,
+        yPtr,
+      ),
+    );
+    if (nonePtr[0] === 1) {
+      return undefined;
+    }
+    return [xPtr[0], yPtr[0]];
   }
 
   /**

@@ -13,6 +13,9 @@ const win = new MiniFB("Hello World", 800, 600);
 // win.addMenu(menu);
 
 const loop = setInterval(() => {
-  if (win.open) win.update();
-  else clearInterval(loop);
+  if (win.open) {
+    // TODO: Updating too often causes heap corruption as well...
+    // win.setTitle(`Hello World | Mouse Pos: ${win.getMousePos()?.join(", ")}`);
+    win.update();
+  } else clearInterval(loop);
 }, 1000 / 60);
