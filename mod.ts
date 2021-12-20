@@ -56,6 +56,26 @@ const lib = Deno.dlopen(path, {
     result: "u8",
   },
 
+  window_is_menu_pressed: {
+    parameters: ["u32", "pointer"],
+    result: "u8",
+  },
+
+  window_add_menu: {
+    parameters: ["u32", "u32", "pointer"],
+    result: "u8",
+  },
+
+  window_remove_menu: {
+    parameters: ["u32", "u32"],
+    result: "u8",
+  },
+
+  window_get_size: {
+    parameters: ["u32", "pointer", "pointer"],
+    result: "u8",
+  },
+
   window_close: {
     parameters: ["u32"],
     result: "u8",
@@ -85,6 +105,16 @@ const lib = Deno.dlopen(path, {
     parameters: ["u32"],
     result: "u8",
   },
+
+  menu_new: {
+    parameters: ["pointer", "pointer"],
+    result: "u8",
+  },
+
+  menu_destroy: {
+    parameters: ["u32"],
+    result: "u8",
+  },
 });
 
 const encode = (str: string): Uint8Array => (Deno as any).core.encode(str);
@@ -104,8 +134,30 @@ function unwrap(result: unknown) {
   }
 }
 
+export class Menu {
+  #id = 0;
+
+  get rid() {
+    return this.#id;
+  }
+
+  constructor(title: string) {
+    const idPtr = new Uint32Array(1);
+    unwrap(lib.symbols.menu_new(idPtr, cstr(title)));
+    this.#id = idPtr[0];
+  }
+
+  destroy() {
+    unwrap(lib.symbols.menu_destroy(this.#id));
+  }
+}
+
 export class MiniFB {
   #id = 0;
+
+  get rid() {
+    return this.#id;
+  }
 
   constructor(
     title: string,
@@ -148,6 +200,22 @@ export class MiniFB {
 
   setKeyRepeatRate(rate: number) {
     unwrap(lib.symbols.window_set_key_repeat_rate(this.#id, rate));
+  }
+
+  isMenuPressed(): bigint | undefined {
+    const pressed = new BigInt64Array(1);
+    unwrap(lib.symbols.window_is_menu_pressed(this.#id, pressed));
+    return pressed[0] < 0 ? undefined : pressed[0];
+  }
+
+  addMenu(menu: Menu) {
+    const handlePtr = new Uint32Array(1);
+    unwrap(lib.symbols.window_add_menu(this.#id, menu.rid, handlePtr));
+    return handlePtr[0];
+  }
+
+  removeMenu(handle: number) {
+    unwrap(lib.symbols.window_remove_menu(this.#id, handle));
   }
 
   /**
