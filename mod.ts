@@ -111,6 +111,21 @@ const lib = Deno.dlopen(path, {
     result: "u8",
   },
 
+  menu_add_separator: {
+    parameters: ["u32"],
+    result: "u8",
+  },
+
+  menu_add_sub_menu: {
+    parameters: ["u32", "pointer", "u32"],
+    result: "u8",
+  },
+
+  menu_add_item: {
+    parameters: ["u32", "pointer", "usize"],
+    result: "u8",
+  },
+
   menu_destroy: {
     parameters: ["u32"],
     result: "u8",
@@ -145,6 +160,21 @@ export class Menu {
     const idPtr = new Uint32Array(1);
     unwrap(lib.symbols.menu_new(idPtr, cstr(title)));
     this.#id = idPtr[0];
+  }
+
+  addSeparator() {
+    unwrap(lib.symbols.menu_add_separator(this.#id));
+    return this;
+  }
+
+  addItem(name: string, id: number) {
+    unwrap(lib.symbols.menu_add_item(this.#id, cstr(name), id));
+    return this;
+  }
+
+  addSubMenu(name: string, menu: Menu) {
+    unwrap(lib.symbols.menu_add_sub_menu(this.#id, cstr(name), menu.rid));
+    return this;
   }
 
   destroy() {
@@ -202,10 +232,10 @@ export class MiniFB {
     unwrap(lib.symbols.window_set_key_repeat_rate(this.#id, rate));
   }
 
-  isMenuPressed(): bigint | undefined {
+  isMenuPressed(): number | undefined {
     const pressed = new BigInt64Array(1);
     unwrap(lib.symbols.window_is_menu_pressed(this.#id, pressed));
-    return pressed[0] < 0 ? undefined : pressed[0];
+    return pressed[0] < 0 ? undefined : Number(pressed[0]);
   }
 
   addMenu(menu: Menu) {

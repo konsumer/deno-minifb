@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::ffi::CStr;
 use std::ffi::CString;
 use std::os::raw::c_char;
 use std::sync::Arc;
@@ -7,6 +8,8 @@ use std::sync::MutexGuard;
 
 use minifb::Menu as MfbMenu;
 use minifb::MenuHandle;
+use minifb::MenuItem as MfbMenuItem;
+use minifb::MenuItemHandle;
 // use minifb::Key;
 use minifb::Window as MfbWindow;
 use minifb::WindowOptions;
@@ -38,6 +41,17 @@ impl Menu {
     }
 }
 
+pub struct MenuItem(Arc<Mutex<MfbMenuItem<'static>>>);
+
+unsafe impl Send for MenuItem {}
+unsafe impl Sync for MenuItem {}
+
+impl MenuItem {
+    pub fn get(&'static self) -> MutexGuard<MfbMenuItem> {
+        self.0.lock().unwrap()
+    }
+}
+
 // Since all calls are sync, we will use a global error state.
 pub static LAST_ERROR: Lazy<Mutex<Option<CString>>> = Lazy::new(|| Mutex::new(None));
 
@@ -46,7 +60,11 @@ pub static NEXT_RESOURCE_ID: Lazy<Mutex<ResourceId>> = Lazy::new(|| Mutex::new(1
 pub static WINDOWS: Lazy<Mutex<HashMap<ResourceId, Window>>> =
     Lazy::new(|| Mutex::new(HashMap::new()));
 pub static MENUS: Lazy<Mutex<HashMap<ResourceId, Menu>>> = Lazy::new(|| Mutex::new(HashMap::new()));
+pub static MENU_ITEMS: Lazy<Mutex<HashMap<ResourceId, MenuItem>>> =
+    Lazy::new(|| Mutex::new(HashMap::new()));
 pub static MENU_HANDLES: Lazy<Mutex<HashMap<ResourceId, MenuHandle>>> =
+    Lazy::new(|| Mutex::new(HashMap::new()));
+pub static MENU_ITEM_HANDLES: Lazy<Mutex<HashMap<ResourceId, MenuItemHandle>>> =
     Lazy::new(|| Mutex::new(HashMap::new()));
 
 pub type Result = u8;
@@ -280,7 +298,11 @@ pub unsafe extern "C" fn window_remove_menu(id: ResourceId, handle_id: ResourceI
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn window_get_size(id: ResourceId, width: *mut usize, height: *mut usize) -> Result {
+pub unsafe extern "C" fn window_get_size(
+    id: ResourceId,
+    width: *mut usize,
+    height: *mut usize,
+) -> Result {
     let windows = WINDOWS.lock().unwrap();
 
     if let Some(window) = windows.get(&id) {
@@ -390,6 +412,68 @@ pub unsafe extern "C" fn menu_new(id: *mut ResourceId, name: *mut c_char) -> Res
     menus.insert(rid, Menu(Arc::new(Mutex::new(menu))));
 
     OK
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn menu_add_separator(id: ResourceId) -> Result {
+    let menus = MENUS.lock().unwrap();
+
+    if let Some(menu) = menus.get(&id) {
+        let mut menu = menu.get();
+        menu.add_separator();
+        OK
+    } else {
+        error_resource_not_found(id)
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn menu_add_sub_menu(
+    id: ResourceId,
+    name: *mut c_char,
+    sub_menu_id: ResourceId,
+ ) -> Result {
+    let menus = MENUS.lock().unwrap();
+
+    if let Some(menu) = menus.get(&id) {
+        let mut menu = menu.get();
+        
+        if let Some(sub_menu) = menus.get(&sub_menu_id) {
+            let sub_menu = sub_menu.get();
+            menu.add_sub_menu(CString::from_raw(name).to_str().unwrap(), &sub_menu);
+            OK
+        } else {
+            error_resource_not_found(sub_menu_id)
+        }
+    } else {
+        error_resource_not_found(id)
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn menu_add_item(
+    id: ResourceId,
+    name: *const c_char,
+    item_id: usize,
+    // item_rid: *mut ResourceId,
+) -> Result {
+    let menus = MENUS.lock().unwrap();
+    // TODO: I can't figure out rust lifetimes for the life of me
+    // let mut items = MENU_ITEMS.lock().unwrap();
+    // let mut next_resource_id = NEXT_RESOURCE_ID.lock().unwrap();
+
+    if let Some(menu) = menus.get(&id) {
+        let mut menu = menu.get();
+        let mut item = menu.add_item(CStr::from_ptr(name).to_str().unwrap(), item_id);
+        item.build();
+        // let rid = *next_resource_id;
+        // *next_resource_id += 1;
+        // *item_rid = rid;
+        // items.insert(rid, MenuItem(Arc::new(Mutex::new(item))));
+        OK
+    } else {
+        error_resource_not_found(id)
+    }
 }
 
 #[no_mangle]
