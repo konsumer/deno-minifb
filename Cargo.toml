@@ -4,7 +4,8 @@ version = "0.1.0"
 edition = "2018"
 
 [dependencies]
-minifb = "0.19.3"
+minifb = "0.20.0"
+once_cell = "1.9.0"
 
 [lib]
 crate-type = ["cdylib"]
